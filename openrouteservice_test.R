@@ -1,10 +1,17 @@
 library(httr)
 library(leaflet)
 library(geojson)
+library(sp)
+library(rgdal)
+library(geojsonio)
 
+#### zorg dat je een apikey hebt van openrouteservice
 key = readRDS("key.RDs")
+
+### link naar api serive isochrones
 link = "https://api.openrouteservice.org/isochrones"
 
+### roep de service aan met een locatie en vertaal output meteen naar een geojson object
 ors_out = GET(
   url = link,
   add_headers("Accept" = "application/json" , "charset"="utf-8"),
@@ -16,11 +23,39 @@ ors_out = GET(
     range = "2000",
     interval = "2000"
   )
-) %>% content("text") %>% 
+) %>%
+  content("text") %>%
   as.geojson()
-
+  
+#### plot de regio op een leaflet
 leaflet() %>%
   addTiles() %>%
   addGeoJSON(ors_out) %>% 
   fitBounds(bbox_get(ors_out)[1], bbox_get(ors_out)[2], bbox_get(ors_out)[3], bbox_get(ors_out)[4])
-  
+ 
+#### om te kijken of een lijst met punten in de regio zitten , hier bijv alle postcode punten
+postcodes = readRDS("PostcodeTabelNL.RDs")
+
+# Maak van lijst  een spatialpoint dataframe
+coordinates(postcodes) = ~   Long_Postcode6P + Lat_Postcode6P
+proj4string(postcodes) = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
+### maak van geojso een spatial polygon data frame
+spobject = geojson_sp(ors_out)
+
+### nu kunnen we checken of een punt in de regio zit.
+buurtinfo = sp::over( postcodes, spobject)
+
+### filter de punten die in de regio liggen en in dit geval nog een kleine sample
+postcodes2 = bind_cols(postcodes@data,as.data.frame(postcodes@coords),buurtinfo) %>%  
+  filter(!is.na(group_index)) %>% sample_n(100)
+
+
+Zet ze op de kaart
+leaflet() %>%
+  addTiles() %>%
+  addGeoJSON(ors_out) %>% 
+  addMarkers(data = postcodes2, lng = ~Long_Postcode6P, lat = ~Lat_Postcode6P) %>% 
+  fitBounds(bbox_get(ors_out)[1], bbox_get(ors_out)[2], bbox_get(ors_out)[3], bbox_get(ors_out)[4])
+
+
