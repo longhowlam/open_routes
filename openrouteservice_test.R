@@ -51,7 +51,7 @@ postcodes2 = bind_cols(postcodes@data,as.data.frame(postcodes@coords),buurtinfo)
   filter(!is.na(group_index)) %>% sample_n(100)
 
 
-Zet ze op de kaart
+####Zet ze op de kaart
 leaflet() %>%
   addTiles() %>%
   addGeoJSON(ors_out) %>% 
@@ -59,3 +59,25 @@ leaflet() %>%
   fitBounds(bbox_get(ors_out)[1], bbox_get(ors_out)[2], bbox_get(ors_out)[3], bbox_get(ors_out)[4])
 
 
+
+##########  CBS buurt data
+CBS <- readShapeSpatial("CBS_PC4_2017_v1.shp")
+
+#### Zet coordinatensysteem
+proj4string(CBS) <-CRS("+init=epsg:28992 +towgs84=565.237,50.0087,465.658,-0.406857,0.350733,-1.87035,4.0812")
+
+
+#### transformeer naar long /lat
+CBS = spTransform(CBS, CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+
+CBS@data[1,]
+
+#### maak een hele simpele plot
+plot(CBS)
+
+
+tmp = over(CBS, spobject)
+tmp2 = bind_cols(CBS@data,tmp)
+
+%>%  
+  filter(!is.na(group_index)) %>% sample_n(100)
