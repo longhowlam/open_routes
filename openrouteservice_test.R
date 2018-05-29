@@ -4,6 +4,7 @@ library(geojson)
 library(sp)
 library(rgdal)
 library(geojsonio)
+library(dplyr)
 
 #### zorg dat je een apikey hebt van openrouteservice
 key = readRDS("key.RDs")
@@ -79,5 +80,21 @@ plot(CBS)
 tmp = over(CBS, spobject)
 tmp2 = bind_cols(CBS@data,tmp)
 
-%>%  
-  filter(!is.na(group_index)) %>% sample_n(100)
+######################################################################################
+
+############ geocoding
+
+link = "https://api.openrouteservice.org/geocode/search" 
+?New%20item=Amstelveen
+
+
+geo_out = GET(
+  url = link,
+  add_headers("Accept" = "application/json" , "charset"="utf-8"),
+  query = list(
+    api_key  = key,
+    text = "30 West 26th Street, New York, NY"  
+  )
+) 
+
+pp = content(geo_out)
