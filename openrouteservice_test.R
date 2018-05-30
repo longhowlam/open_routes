@@ -62,7 +62,7 @@ leaflet() %>%
 
 
 ##########  CBS buurt data
-CBS <- readShapeSpatial("CBS_PC4_2017_v1.shp")
+CBS <- maptools::readShapeSpatial("CBS_PC4_2017_v1.shp")
 
 #### Zet coordinatensysteem
 proj4string(CBS) <-CRS("+init=epsg:28992 +towgs84=565.237,50.0087,465.658,-0.406857,0.350733,-1.87035,4.0812")
