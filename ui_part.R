@@ -1,11 +1,11 @@
 ui <- dashboardPage(
 
   dashboardHeader(
-    title = "Wat zit er in mijn verzorgingsgebied?"
+    title = "verzorgingsgebied"
   ),
   
   dashboardSidebar(
-    width = 500,
+    width = 300,
     sidebarMenu(
       menuItem("inleiding"),
       textInput("pc6", "postcode", value = "1183AA"),
@@ -20,9 +20,9 @@ ui <- dashboardPage(
       leafletOutput("kaartje", height = "700px", width = "700px")
     ),
     column(6,
-       valueBoxOutput("rate"),
-       valueBoxOutput("count"),
-       valueBoxOutput("users")
+       valueBoxOutput("mensen"),
+       valueBoxOutput("kinderen"),
+       valueBoxOutput("uitkering")
     )
   )
   

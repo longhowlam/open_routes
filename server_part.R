@@ -64,17 +64,31 @@ server = function(input, output, session){
       fitBounds(bbox_get(ors_out)[1], bbox_get(ors_out)[2], bbox_get(ors_out)[3], bbox_get(ors_out)[4])
   })
   
-  output$rate <- renderValueBox({
-   valueBox(
-      value = "blabla ",
-      subtitle = "Downloads per sec (last 5 min)",
+  output$kinderen <- renderValueBox({
+    spobject = apicall() %>% 
+      content("text") %>%
+      as.geojson() %>% 
+      geojson_sp()
+    
+    covered_pc4 = over(
+      CBS, 
+      spobject
+    ) %>%
+      bind_cols(CBS@data) %>% 
+      filter(!is.na(group_index))
+    
+    TotaalMensen = sum(covered_pc4$INWONER[covered_pc4$INWONER > 0])
+    Kinderen = sum(covered_pc4$INW_014[covered_pc4$INW_014 > 0])
+    
+    valueBox(
+      value = paste(formatC(100*Kinderen/TotaalMensen, digits = 2, format = "f", decimal.mark = ","),"%"),
+      subtitle = "% tot 14 jaar van totaal",
       icon = icon("area-chart"),
       color = "yellow"
     )
   })
 
-  output$count <- renderValueBox({
-    
+  output$mensen <- renderValueBox({
     
     spobject = apicall() %>% 
       content("text") %>%
@@ -90,19 +104,33 @@ server = function(input, output, session){
     
     TotaalMensen = sum(covered_pc4$INWONER)
     
-    
     valueBox(
       value = formatC(TotaalMensen, digits = 0, format = "f", big.mark = "."),
-      subtitle = "Number of people in area",
+      subtitle = "Aantal mensen in gebied",
       icon = icon("area-chart"),
       color = "yellow"
     )
   })
 
-  output$users <- renderValueBox({
+  output$uitkering <- renderValueBox({
+    spobject = apicall() %>% 
+      content("text") %>%
+      as.geojson() %>% 
+      geojson_sp()
+    
+    covered_pc4 = over(
+      CBS, 
+      spobject
+    ) %>%
+      bind_cols(CBS@data) %>% 
+      filter(!is.na(group_index))
+    
+    TotaalMensen = sum(covered_pc4$INWONER[covered_pc4$INWONER > 0])
+    uitkering = sum(covered_pc4$UITKMINAOW[covered_pc4$UITKMINAOW > 0], na.rm = TRUE)
+    
     valueBox(
-      value = "blabla ",
-      subtitle = "Downloads per sec (last 5 min)",
+      value = paste(formatC(100*uitkering/TotaalMensen, digits = 2, format = "f", decimal.mark = ","), "%"),
+      subtitle = "% mensen met uitkering",
       icon = icon("area-chart"),
       color = "yellow"
     )
