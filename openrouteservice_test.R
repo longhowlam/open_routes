@@ -21,8 +21,8 @@ ors_out = GET(
     profile  = "driving-car",
     locations = "4.8510,52.3090",
     range_type = "time",
-    range = "2000",
-    interval = "2000"
+    range = "1000",
+    interval = "1000"
   )
 ) %>%
   content("text") %>%
@@ -80,6 +80,25 @@ plot(CBS)
 tmp = over(CBS, spobject)
 tmp2 = bind_cols(CBS@data,tmp)
 
+
+
+indx = (1:4066)[!is.na(tmp$group_index)]
+pp = CBS[indx,]
+leaflet() %>%
+  addTiles() %>%
+  addGeoJSON(ors_out) %>% 
+  fitBounds(bbox_get(ors_out)[1], bbox_get(ors_out)[2], bbox_get(ors_out)[3], bbox_get(ors_out)[4]) %>% 
+  addPolygons(data = pp,
+              stroke = TRUE, weight = 1, fillOpacity = 0.15, smoothFactor = 0.15)
+
+
+
+
+
+
+
+
+
 ######################################################################################
 
 ############ geocoding
@@ -98,3 +117,29 @@ geo_out = GET(
 ) 
 
 pp = content(geo_out)
+
+
+
+
+
+
+GET(
+  url = link,
+  add_headers("Accept" = "application/json" , "charset"="utf-8"),
+  query = list(
+    api_key  = key,
+    profile  = "driving-car",
+    locations = "4.8510,52.3090",
+    range_type = "time",
+    range = "2000",
+    interval = "2000"
+  )
+) %>%
+  content("text") %>%
+  as.geojson() %>% 
+  geojson_write()
+
+
+
+
+

@@ -10,6 +10,8 @@ library(geojson)
 library(geojsonio)
 library(sp)
 library(dplyr)
+library(shinycustomloader)
+library(DT)
 
 source("ui_part.R")
 source("server_part.R")

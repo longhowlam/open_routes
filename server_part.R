@@ -16,7 +16,8 @@ server = function(input, output, session){
     list(
       pc6 = input$pc6,
       profile = input$profile,
-      tijd = input$tijd
+      tijd = input$tijd,
+      plotpc4shapes = input$plotpc4shapes
     )
   })
   
@@ -53,15 +54,50 @@ server = function(input, output, session){
       content("text") %>%
       as.geojson()
     
-    #### plot de regio op een leaflet
-    leaflet() %>%
+    m = leaflet() %>%
       addTiles() %>%
       addGeoJSON(ors_out) %>% 
       addMarkers(
         lng = puntlocatie$Long_Postcode6P,
         lat = puntlocatie$Lat_Postcode6P
       ) %>% 
-      fitBounds(bbox_get(ors_out)[1], bbox_get(ors_out)[2], bbox_get(ors_out)[3], bbox_get(ors_out)[4])
+      fitBounds(
+        bbox_get(ors_out)[1], bbox_get(ors_out)[2],
+        bbox_get(ors_out)[3], bbox_get(ors_out)[4]
+      )
+    
+    if(getinputs()$plotpc4shapes){
+      
+      spobject =  ors_out %>% 
+        geojson_sp()
+      covered_pc4 = over(
+        CBS, 
+        spobject
+      )
+      indx = (1:4066)[!is.na(covered_pc4$group_index)]
+      pp = CBS[indx,]
+      
+      labels <- sprintf(
+        "<strong>postcode</strong> %g <br/> aantal inwoners %g",
+        pp$PC4, pp$INWONER
+      ) %>% lapply(htmltools::HTML)
+      
+      m = m %>% 
+      addPolygons(
+        data = pp,
+        stroke = TRUE, weight = 1, fillOpacity = 0.15, smoothFactor = 0.15,
+        highlightOptions = highlightOptions(
+          color = "white", weight = 6,
+          bringToFront = TRUE
+        ),
+        label = labels,
+        labelOptions = labelOptions(
+          style = list("font-weight" = "normal", padding = "3px 8px"),
+          textsize = "15px",
+          direction = "auto")
+        )
+    }
+    m
   })
   
   output$kinderen <- renderValueBox({
@@ -136,5 +172,25 @@ server = function(input, output, session){
     )
   })
   
-  
+  output$pc4tabel <- renderDataTable({
+    spobject = apicall() %>% 
+      content("text") %>%
+      as.geojson() %>% 
+      geojson_sp()
+    
+    covered_pc4 = over(
+      CBS, 
+      spobject
+    ) %>%
+      bind_cols(CBS@data) %>% 
+      filter(!is.na(group_index))
+    
+    datatable( 
+      rownames = FALSE,
+      covered_pc4 %>% select(PC4, INWONER, MAN, VROUW, INW_014, INW_1524, WONING, AANTAL_HH),
+      filter = 'top', options = list(
+        pageLength = 15, autoWidth = TRUE)
+    )
+    
+  })
 }

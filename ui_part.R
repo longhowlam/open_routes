@@ -11,22 +11,31 @@ ui <- dashboardPage(
       textInput("pc6", "postcode", value = "1183AA"),
       numericInput("tijd", "maximale reistijd (min)", value = 15, min = 1, max = 60),
       selectInput("profile", "vervoertype", choices = c("driving-car", "cycling-regular") ),
+      checkboxInput("plotpc4shapes", "plot PC4 shapes"),
       actionButton("goButton", "Go!")
     )
   ),
   
   dashboardBody(
-    column(6,
-      leafletOutput("kaartje", height = "700px", width = "700px")
-    ),
-    column(6,
-       valueBoxOutput("mensen"),
-       valueBoxOutput("kinderen"),
-       valueBoxOutput("uitkering")
+    mainPanel(
+      fluidRow(
+        column(8,
+          fluidRow(
+            column(4, valueBoxOutput("mensen", width = 12)),
+            column(4,  valueBoxOutput("kinderen", width = 12)),
+            column(4,  valueBoxOutput("uitkering", width = 12))
+          ),
+          fluidRow(
+            withLoader(leafletOutput("kaartje", height = "800px"))
+          )
+        ),
+        column(4,
+          dataTableOutput("pc4tabel")
+        )
+      )
     )
   )
   
-    
 )
 
 
