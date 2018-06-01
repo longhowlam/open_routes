@@ -142,4 +142,9 @@ GET(
 
 
 
+as.geojson(CBS) %>% 
+  geojson_write(file ="CBS_PC4.geojson" )
+
+
+
 

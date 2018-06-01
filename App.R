@@ -12,6 +12,9 @@ library(sp)
 library(dplyr)
 library(shinycustomloader)
 library(DT)
+library(RColorBrewer)
+library(colorRamps)
+
 
 source("ui_part.R")
 source("server_part.R")

@@ -1,12 +1,14 @@
+################### import data ####################################
 key  = readRDS("key.RDs")
 link = "https://api.openrouteservice.org/isochrones"
 PC   = readRDS("data/PC.RDs")
 CBS  = readRDS("data/CBS.RDs")
 
-
+####### SERVER FUNCTIE ############################################
 
 server = function(input, output, session){
   
+  #### reactive stuff #################################
   getPuntLocation <- reactive({
     pc6 = getinputs()$pc6
     PC[pc6]
@@ -14,7 +16,7 @@ server = function(input, output, session){
   
   getinputs <- eventReactive(input$goButton, {
     list(
-      pc6 = input$pc6,
+      pc6 = str_to_upper(str_remove(input$pc6, "\\s")),
       profile = input$profile,
       tijd = input$tijd,
       plotpc4shapes = input$plotpc4shapes
@@ -45,8 +47,17 @@ server = function(input, output, session){
     
   })
   
+  ########## intro text  ###############################
+  output$intro = renderUI({
+    list(
+      h4("Shiny app om te zien wat er op bepaalde reisafstand van een postocde zit"),
+      h5("Type een postocde in, bijv 1183AA en een maximale reistijd en click go.
+         Er verschijnt een plaatje met de omtrek en alle postcode4 gebieden. De tabel geeft
+         kenmerken per postoce 4 gebied die in de maximale reisafstand zitten.")
+    )
+  })
   
-  
+  ######## leaflet with regions ########################
   output$kaartje = renderLeaflet({
     
     puntlocatie = getPuntLocation()
@@ -74,7 +85,7 @@ server = function(input, output, session){
         CBS, 
         spobject
       )
-      indx = (1:4066)[!is.na(covered_pc4$group_index)]
+      indx = (1:dim(covered_pc4)[1])[!is.na(covered_pc4$group_index)]
       pp = CBS[indx,]
       
       labels <- sprintf(
@@ -82,9 +93,15 @@ server = function(input, output, session){
         pp$PC4, pp$INWONER
       ) %>% lapply(htmltools::HTML)
       
+      colpal <- colorQuantile(
+        palette = green2red(7), n=7,
+        domain = pp$INWONER
+      )
+      
       m = m %>% 
       addPolygons(
         data = pp,
+        fillColor = colpal(pp$INWONER),
         stroke = TRUE, weight = 1, fillOpacity = 0.15, smoothFactor = 0.15,
         highlightOptions = highlightOptions(
           color = "white", weight = 6,
@@ -100,6 +117,7 @@ server = function(input, output, session){
     m
   })
   
+  ###### value boxes #########################
   output$kinderen <- renderValueBox({
     spobject = apicall() %>% 
       content("text") %>%
@@ -172,6 +190,7 @@ server = function(input, output, session){
     )
   })
   
+  ##### data table et PC4's #####################
   output$pc4tabel <- renderDataTable({
     spobject = apicall() %>% 
       content("text") %>%
@@ -187,9 +206,14 @@ server = function(input, output, session){
     
     datatable( 
       rownames = FALSE,
-      covered_pc4 %>% select(PC4, INWONER, MAN, VROUW, INW_014, INW_1524, WONING, AANTAL_HH),
+      covered_pc4 %>% select(
+        PC4, INWONER, MAN, VROUW, 
+        INW_014, INW_1524, INW_2544,INW_4564,INW_65PL,
+        WONING, AANTAL_HH, UITKMINAOW
+      ),
       filter = 'top', options = list(
-        pageLength = 15, autoWidth = TRUE)
+        pageLength = 18, autoWidth = TRUE, scrollX = TRUE
+        )
     )
     
   })
